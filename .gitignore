@@ -58,3 +58,14 @@ Temporary Items
 
 # pdf files
 *.pdf
+
+# picture files
+*.jpg
+*.jpeg
+*.png
+
+# MATLAB figures
+*.fig
+
+# HTML files
+*.html
