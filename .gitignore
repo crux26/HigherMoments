@@ -45,3 +45,16 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# MATLAB data files
+*.mat
+
+# text files
+*.txt
+
+# MS-Word files
+*.doc
+*.docx
+
+# pdf files
+*.pdf
