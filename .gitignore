@@ -69,3 +69,6 @@ Temporary Items
 
 # HTML files
 *.html
+
+# ZIP files
+*.zip
