@@ -76,3 +76,6 @@ Temporary Items
 # EXCEL files
 *.xlsx
 *.xls
+
+# CSV files
+*.csv
