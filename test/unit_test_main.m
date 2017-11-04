@@ -1,12 +1,15 @@
+function [moment] = unit_test_main(jj, trimflag, Smoothing_IVonly)
 %% main: HigherMoments
 %% import data
-clear;clc;
+% clear;clc;
 Dorm = false;
 if ~Dorm
+    addpath('D:\Dropbox\GitHub\HigherMoments');
     addpath('D:\Dropbox\GitHub\HigherMoments\from TRP');
     addpath('D:\Dropbox\GitHub\HigherMoments\data\codes\');
     addpath('D:\Dropbox\GitHub\HigherMoments\Kernel Smoothing Regression\ksr');
 else
+    addpath('F:\Dropbox\GitHub\HigherMoments');
     addpath('F:\Dropbox\GitHub\HigherMoments\from TRP');
     addpath('F:\Dropbox\GitHub\HigherMoments\data\codes\');
     addpath('F:\Dropbox\GitHub\HigherMoments\Kernel Smoothing Regression\ksr');
@@ -46,17 +49,16 @@ ia_date_ = [ia_date_; length(CallData(:,1))+1]; % to include the last index.
 ia_date__ = [ia_date__; length(PutData(:,1))+1]; % unique() doesn't return the last index.
 
 %%
-trimflag = 0;           % trimflag==1: Kernel Smoothing Regression
-Smoothing_IVonly = 1;
+% trimflag = 1;           % trimflag==1: Kernel Smoothing Regression
+% Smoothing_IVonly = 0;
 
 MomentRank = 1:4 ;
-moment = zeros(length(date_), length(MomentRank));
+moment = zeros(1, length(MomentRank));
 
 % Below takes 21.7s (LAB PC)
-idx_err=0;
-idx_err_dates=[];
-tic
-for jj=1:length(date_)                   % Note that length(date_)+1==length(ia_date_) now.
+% idx_err=0;
+% idx_err_dates=[];
+% for jj=1:length(date_)                   % Note that length(date_)+1==length(ia_date_) now.
     try
         tmpIndexVec1 = ia_date_(jj):(ia_date_(jj+1)-1) ;
         tmpIndexVec2 = ia_date__(jj):(ia_date__(jj+1)-1) ;
@@ -72,14 +74,14 @@ for jj=1:length(date_)                   % Note that length(date_)+1==length(ia_
         T_ = T(jj);
         [C, Kc, P, Kp, IV_C, IV_P] = OpTrim_wrapper(S_, C, Kc, P, Kp, r_, T_, IV_C, IV_P, q_, trimflag, Smoothing_IVonly);
         % price2mom() cannot handle vector -> need to fix.
-        moment(jj,:) = price2mom(S_, C, Kc, P, Kp, r_, T_, IV_C, IV_P, q_, MomentRank);
+        moment = price2mom(S_, C, Kc, P, Kp, r_, T_, IV_C, IV_P, q_, MomentRank);
     catch
         warning('Problem with the function or data. Check again.');
-        idx_err=idx_err+1;
-        idx_err_dates(end+1)=date_(jj);
+%         idx_err=idx_err+1;
+%         idx_err_dates(end+1)=date_(jj);
     end
-end
-toc
+% end
+
 
 %% --> Checked that length(idx_err_dates)==0 --> No problem!
 
@@ -91,8 +93,10 @@ if ~Dorm
     rmpath('D:\Dropbox\GitHub\HigherMoments\Kernel Smoothing Regression\ksr');
     rmpath('D:\Dropbox\GitHub\HigherMoments\data\codes\');
     rmpath('D:\Dropbox\GitHub\HigherMoments\from TRP');
+    rmpath('D:\Dropbox\GitHub\HigherMoments');
 else
     rmpath('F:\Dropbox\GitHub\HigherMoments\Kernel Smoothing Regression\ksr');
     rmpath('F:\Dropbox\GitHub\HigherMoments\data\codes\');
     rmpath('F:\Dropbox\GitHub\HigherMoments\from TRP');
+    rmpath('F:\Dropbox\GitHub\HigherMoments');
 end
