@@ -1,5 +1,4 @@
-%% <OpData_2nd_BSIV.m> -> <OptData_2nd_BSIV_Trim.m>
-%% <importData.m> -> <importOpData_1St.m> -> <TrimData_1st.m> OR <TrimData_1st_BSIV.m> (-> <dataSplit2expiry.m>)
+%% <importOpData_2nd.m> -> <OPData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> -> <OpData_2nd_BSIV_Trim_extrap.m>
 %% remove non-sensical IV
 % This is checked as often the raw data from SAS doesn't make sense at all.
 % Refer to <opPrice_RelevanceChk.m>. This gives an example of "wrongly"
@@ -7,8 +6,23 @@
 % Note that according to the document, Option Metrics calculates implied
 % volatilities with BS model.
 clear;clc;
-load('OpData_BSIV_2nd.mat','CallData', 'CallIV', 'CallVolDev', 'PutData', 'PutIV', 'PutVolDev', ...
+isDorm = false;
+if isDorm == true
+    drive = 'F:';
+else
+    drive = 'D:';
+end
+homeDirectory = sprintf('%s\\Dropbox\\GitHub\\HigherMoments', drive);
+gen_data_path = sprintf('%s\\data\\gen_data', homeDirectory);
+
+OptionsData_genData_path = sprintf('%s\\Dropbox\\GitHub\\OptionsData\\data\\gen_data', drive);
+
+%Below took: 17.6 (LAB PC)
+tic;
+load(sprintf('%s\\rawOpData_dly_2nd_BSIV.mat', OptionsData_genData_path), ...
+    'CallData', 'CallIV', 'CallVolDev', 'PutData', 'PutIV', 'PutVolDev', ...
     'symbol_C', 'symbol_P', 'CallBidAsk', 'PutBidAsk', 'TTM_C', 'TTM_P');
+toc;
 DaysPerYear = 252;
 
 
@@ -24,12 +38,11 @@ DaysPerYear = 252;
 % Volatility = blsimpv(Price, Strike, Rate, Time,...
 %     Value, Limit, Yield, Tolerance, Class)
 
-
 [CallnRow,~] = size(CallData);
 [PutnRow,~] = size(PutData);
 
 %% Filtering conditions should be added below.
-%Below took: 0.01s - with DORM PC
+%Below took: 0.12s (LAB PC)
 tic
 idx_C = find( CallBidAsk(:,1) == 0 | ... % exclude zero bid
         CallData(:,17) > 1 | ... % exclude ITM (S/K > 1)
@@ -47,7 +60,7 @@ TTM_C = TTM_C(idx_C, :);
 symbol_C = symbol_C(idx_C, :);
 
 %% Filtering conditions should be added below.
-% Below took: 0.01s - with DORM PC
+% Below took: 0.11s (LAB PC)
 tic
 idx_P = find( PutBidAsk(:,1) == 0 | ... % exclude zero bid
         PutData(:,17) < 1 |... % exclude ITM (S/K < 1)
@@ -64,5 +77,9 @@ PutBidAsk = PutBidAsk(idx_P, :);
 TTM_P = TTM_P(idx_P, :);
 symbol_P = symbol_P(idx_P, :);
 %%
-save('OpData_BSIV_2nd_Trim.mat','CallData', 'CallIV', 'CallVolDev', 'CallBidAsk', 'TTM_C', 'symbol_C', ...
+% Below took: 7.9s (LAB PC)
+tic;
+save(sprintf('%s\\OpData_dly_2nd_BSIV_Trim.mat', gen_data_path), ...
+    'CallData', 'CallIV', 'CallVolDev', 'CallBidAsk', 'TTM_C', 'symbol_C', ...
  'PutData', 'PutIV', 'PutVolDev', 'PutBidAsk', 'TTM_P', 'symbol_P');
+toc;
