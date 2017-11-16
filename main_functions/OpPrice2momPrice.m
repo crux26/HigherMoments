@@ -1,5 +1,5 @@
 function moment = OpPrice2momPrice(S0, C, Kc, P, Kp, r, T, IV_C, IV_P, q, MomentRank)
-% S0: scalar
+% S0, r, T, q: scalar
 % C,Kc,P,Kp: vector
 % MomentRank: vector
 df = exp(-r*T);
