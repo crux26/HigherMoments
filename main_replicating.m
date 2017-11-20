@@ -1,6 +1,8 @@
-%% Pre-allocation of variables being fixed.
-
+%% main_replicating() -> main_tsreg().
 %% main: HigherMoments
+% Ultimate goal: Calculate option implied moments and pass the results to main_tsreg().
+% Current goal: Let my own results match with the paper's data.
+
 %% import data
 clear;clc;
 isDorm = false;
@@ -58,17 +60,13 @@ idx_exdate__ = idx_exdate__(1:end-1);
 trimflag = 0;
 Smoothing_IVonly = 1;
 MomentRank = 1:4;
-momPrice = zeros(length(date_), length(MomentRank));
-S = zeros(length(date_), 1);
-r = zeros(length(date_), 1); q = zeros(length(date_), 1); TTM = zeros(length(date_), 1);
+momPrice = zeros(length(dates_), length(MomentRank)); % dates_ used to be date_: Check the diff.
+S = zeros(length(dates_), 1);
+r = zeros(length(dates_), 1); q = zeros(length(dates_), 1); TTM = zeros(length(dates_), 1);
 % Below takes: 23.7s -> 22.9s (LAB, DORM. parfor: 103.6s, LAB)
 tic
-
 % Calculate by exdate, not date.
 for jj=1:length(exdate_)                % Note that length(date_)+1==length(ia_date_) now.
-%     tmpIdx1 = idx_exdate_(jj):(idx_exdate_(jj+1)-1) ; % for call
-%     tmpIdx2 = idx_exdate__(jj):(idx_exdate__(jj+1)-1) ; % for put
-    
     tmpIdx1 = idx_exdate_(jj):idx_exdate_next(jj) ; % for call
     tmpIdx2 = idx_exdate__(jj):idx_exdate__next(jj) ; % for put
 
