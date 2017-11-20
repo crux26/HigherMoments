@@ -1,4 +1,7 @@
-%% MUST RE-CHECK THE CODE. DON'T SEE THE PURPOSE OF IT.
+%% main_replicating() -> main_tsreg().
+%% Ultimate goal: export this data to SAS.
+%% Checking Done! (2017.11.16) Works perfectly fine. Also checked with EViews.
+%% Checked the paper's raw data file, SKEWKURT_tmp.mat matches the paper's result (which is done by SAS).
 %% main() -> main_tsreg().
 clear;clc;
 isDorm = false;
