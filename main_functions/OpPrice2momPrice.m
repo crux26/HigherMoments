@@ -8,12 +8,10 @@ if ~exist('MomentRank', 'var')
     MomentRank = 1:4;
 end
 
-
-forward = S0*exp(r*T);
-idx_OTMC = find(forward < Kc); 
-idx_OTMP = find(Kp < forward);
-% idx_ITMC = find(forward >= Kc);
-% idx_ITMP = find(Kp >= forward);
+% In BKM (2003), ITM defined as moneyness, NOT forward moneyness.
+% Anyway, either will have no big difference, as TTM is small.
+idx_OTMC = find(S0 < Kc); 
+idx_OTMP = find(Kp < S0);
 
 Kc_OTM = Kc(idx_OTMC);
 Kp_OTM = Kp(idx_OTMP); 
