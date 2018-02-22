@@ -1,7 +1,7 @@
 %% <importOpData_2nd.m> -> <OPData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> -> <OpData_2nd_BSIV_Trim_extrap.m>
 %% import data
 clear; clc;
-isDorm = false;
+isDorm = true;
 if isDorm == true
     drive = 'F:';
 else
@@ -48,6 +48,13 @@ PutData = PutData(idx_P, :);
 % TTM_C = TTM_C(idxC); TTM_P = TTM_P(idxP);
 % clear idxC idxP;
 
+%% Exclude data whose TTM < 5D. This will alleviate (date,exdate) pair mismatch b/w Call & Put.
+idx_C = find(CallData(:,23) > 5/252); % daysdif(), yearfrac() would've been more accurate, but it's enough.
+idx_P = find(PutData(:,23) > 5/252);
+CallData = CallData(idx_C, :);
+PutData = PutData(idx_P, :);
+
+
 %% Use only the intersection of CallData.date & PutData.date.
 [date_, ~] = unique(CallData(:,1));
 [date__, ~] = unique(PutData(:,1));
@@ -71,24 +78,56 @@ end
 ia_date_ = [ia_date_; length(CallData(:,1))+1]; % to include the last index.
 ia_date__ = [ia_date__; length(PutData(:,1))+1]; % unique() doesn't return the last index.
 
-%% IV extrapolation from 0.01% to 300% moneyness.
+%% Change CallData, PutData into tables.
+CallData = table(CallData(:,1), CallData(:,2), CallData(:,3), CallData(:,4), CallData(:,5), ...
+    CallData(:,6), CallData(:,7), CallData(:,8), CallData(:,9), CallData(:,10), CallData(:,11), CallData(:,12), ...
+    CallData(:,13), CallData(:,14), CallData(:,15), CallData(:,16), CallData(:,17), CallData(:,18), CallData(:,19), ...
+    CallData(:,20), CallData(:,21), CallData(:,22), CallData(:,23), ...
+    'VariableNames', {'date', 'exdate', 'Kc', 'volume', 'open_interest', 'IV', 'delta', 'gamma', 'vega', 'theta', ...
+    'S', 'sprtrn', 'r', 'q', 'spxset', 'spxset_expiry', 'moneyness', 'C', 'opret', 'cpflag', ...
+    'min_datedif', 'min_datedif_2nd', 'TTM'});
+    
+PutData = table(PutData(:,1), PutData(:,2), PutData(:,3), PutData(:,4), PutData(:,5), ...
+    PutData(:,6), PutData(:,7), PutData(:,8), PutData(:,9), PutData(:,10), PutData(:,11), PutData(:,12), ...
+    PutData(:,13), PutData(:,14), PutData(:,15), PutData(:,16), PutData(:,17), PutData(:,18), PutData(:,19), ...
+    PutData(:,20), PutData(:,21), PutData(:,22), PutData(:,23), ...
+    'VariableNames', {'date', 'exdate', 'Kp', 'volume', 'open_interest', 'IV', 'delta', 'gamma', 'vega', 'theta', ...
+    'S', 'sprtrn', 'r', 'q', 'spxset', 'spxset_expiry', 'moneyness', 'P', 'opret', 'cpflag', ...
+    'min_datedif', 'min_datedif_2nd', 'TTM'});
 
+
+%% IV extrapolation from 0.01% to 300% moneyness.
+%% jj=2861, date_==733178 is troublesome.
 CallData_extrap = [];
 PutData_extrap = [];
-% Below takes: 2480s or 41.33m (LAB PC, daily data)
+
+% Below takes: 1816s or 30.27m (DORM PC, daily data)
 tic
 for jj=1:length(date_)                   % Note that length(date_)+1==length(ia_date_) now.
     tmpIdx1 = ia_date_(jj):(ia_date_(jj+1)-1) ; % for call
     tmpIdx2 = ia_date__(jj):(ia_date__(jj+1)-1) ; % for put
 
-%     CallData_extrap_ = IVextrap_ByExdate_mat(CallData(tmpIdx1, 1:end-1), CallData(tmpIdx1, end));
-%     PutData_extrap_ = IVextrap_ByExdate_mat(PutData(tmpIdx2, 1:end-1), PutData(tmpIdx2, end));
-
-    % Retrieve only 2 TTMs closest to 30D. This is copied from ~/ambiguity_premium/.
+    % idNear30D(): Retrieve only 2 TTMs closest to 30D. This is copied from ~/ambiguity_premium/.
     [CallData_, PutData_] = idNear30D(CallData(tmpIdx1,:), PutData(tmpIdx2,:));
+    % dropEnd_OTMC() cannot process multiple exdates. Hence, splitting w.r.t. SplitByExdate.
+    % As idNear30D() is run already, there should be at most 2 exdates for each date.
+    [CallData_1, CallData_2] = SplitByExdate(CallData_);
+    CallData_1 = dropEnd_OTMC(CallData_1);
+    CallData_2 = dropEnd_OTMC(CallData_2);
+    CallData_ = [CallData_1; CallData_2];
+
+    [PutData_1, PutData_2] = SplitByExdate(PutData_);
+    PutData_1 = dropEnd_OTMP(PutData_1); PutData_2 = dropEnd_OTMP(PutData_2);
+    PutData_ = [PutData_1; PutData_2];
+    %---------------
     CallData_extrap_ = IVextrap_ByExdate_mat(CallData_(:, 1:end-1), CallData_(:, end));
     PutData_extrap_ = IVextrap_ByExdate_mat(PutData_(:, 1:end-1), PutData_(:, end));
     %------------------------
+    if size(CallData_extrap_,1) ~= size(PutData_extrap_,1)
+        disp('CallData.len() ~= PutData.len()');
+        break;
+    end
+    
     if any(PutData_extrap_.OpPrice < 0)
         disp(find(PutData_extrap_.OpPrice<0));
         disp('P < 0');
@@ -100,22 +139,12 @@ for jj=1:length(date_)                   % Note that length(date_)+1==length(ia_
         disp('IV < 0');
         break;
     end
-    %------------------------
-    TTM_C_ = unique(CallData_extrap_.TTM);
-    TTM_P_ = unique(PutData_extrap_.TTM);
-    TTM_ = intersect(TTM_C_, TTM_P_);
-    
-    % Don't see the point of the below 2.
-%     CallData_extrap_ = MatMatch(CallData_extrap_, TTM_);
-%     PutData_extrap_ = MatMatch(PutData_extrap_, TTM_);
-    
+
     CallData_extrap = [CallData_extrap; CallData_extrap_];
     PutData_extrap = [PutData_extrap; PutData_extrap_];
 end
 toc
 
-%%
-% CallData_extrap & PutData_extrap mismatch: try unique([date, exdate]) for both.
 %%
 
 % Below takes: 14s (LAB PC)
@@ -127,7 +156,8 @@ CallData_extrap = sortrows(CallData_extrap, [1,2,3]); % sort by (date, exdate, s
 PutData_extrap = sortrows(PutData_extrap, [1,2,3]);
 toc;
 
-% Below takes: 20s (LAB PC)
+%%
+% Below takes: 10s (LAB PC)
 tic;
 save(sprintf('%s\\OpData_dly_2nd_BSIV_Trim_extrap.mat', genData_path), ...
     'CallData_extrap', 'PutData_extrap');

@@ -4,7 +4,7 @@
 %% Checked the paper's raw data file, SKEWKURT_tmp.mat matches the paper's result (which is done by SAS).
 %% main() -> main_tsreg().
 clear;clc;
-isDorm = false;
+isDorm = true;
 if isDorm == true
     drive = 'F:';
 else

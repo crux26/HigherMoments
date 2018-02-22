@@ -1,8 +1,8 @@
-function [CallData_, PutData_] = idNear30D(CallData, PutData)
+function [T_CallData_, T_PutData_] = idNear30D(T_CallData, T_PutData)
 % Extracts only 1 exdate if(exdate==30D) or 2 exdates closest to 30D.
 
-DTM_C = CallData(:,2) - CallData(:,1);  % calendar day dif. Do not use daysdif(~,~,13).
-DTM_P = PutData(:,2) - PutData(:,1);
+DTM_C = T_CallData.exdate - T_CallData.date;  % calendar day dif. Do not use daysdif(~,~,13).
+DTM_P = T_PutData.exdate - T_PutData.date;
 
 [~, idx_near30D_C] = min(abs(DTM_C - 30)); % length(idx_)==1 even if multiple minimum
 [~, idx_near30D_P] = min(abs(DTM_P - 30));
@@ -18,44 +18,44 @@ idxP_unique = find(vP_unique == DTM_P(idx_near30D_P));
 % Reason for try-catch: on j==50, 51, DTM=[2;37;65], [36;64] --> error on j==51.
 % try-catch removed: Not supported in MEX.
 if DTM_C(idx_near30D_C) == 30
-    CallData_ = CallData(DTM_C == DTM_C(idx_near30D_C), :);
+    T_CallData_ = T_CallData(DTM_C == DTM_C(idx_near30D_C), :);
 elseif DTM_C(idx_near30D_C) - 30 > 0
     if length(vC_unique) >= 2 && any(DTM_C < 30)
         tmpExpiry_C = [vC_unique(idxC_unique-1); vC_unique(idxC_unique)];
-        CallData_ = [CallData(DTM_C == tmpExpiry_C(1), :); CallData(DTM_C == tmpExpiry_C(2), :)];
+        T_CallData_ = [T_CallData(DTM_C == tmpExpiry_C(1), :); T_CallData(DTM_C == tmpExpiry_C(2), :)];
     else
-        CallData_ = CallData(DTM_C == DTM_C(idx_near30D_C), :);
+        T_CallData_ = T_CallData(DTM_C == DTM_C(idx_near30D_C), :);
     end
 else
     if length(vC_unique) >= 2 && any(DTM_C > 30)
         tmpExpiry_C = [vC_unique(idxC_unique); vC_unique(idxC_unique+1)];
-        CallData_ = [CallData(DTM_C == tmpExpiry_C(1), :); CallData(DTM_C == tmpExpiry_C(2), :)];
+        T_CallData_ = [T_CallData(DTM_C == tmpExpiry_C(1), :); T_CallData(DTM_C == tmpExpiry_C(2), :)];
     else
-        CallData_ = CallData(DTM_C == DTM_C(idx_near30D_C), :);
+        T_CallData_ = T_CallData(DTM_C == DTM_C(idx_near30D_C), :);
     end
 end
 
 if DTM_P(idx_near30D_P) == 30
-    PutData_ = PutData(DTM_P == DTM_P(idx_near30D_P), :);
+    T_PutData_ = T_PutData(DTM_P == DTM_P(idx_near30D_P), :);
 elseif DTM_P(idx_near30D_P) - 30 > 0
     if length(vP_unique) >= 2 && any(DTM_P < 30)
         tmpExpiry_P = [vP_unique(idxP_unique-1); vP_unique(idxP_unique)];
-        PutData_ = [PutData(DTM_P == tmpExpiry_P(1), :); PutData(DTM_P == tmpExpiry_P(2), :)];
+        T_PutData_ = [T_PutData(DTM_P == tmpExpiry_P(1), :); T_PutData(DTM_P == tmpExpiry_P(2), :)];
     else
-        PutData_ = PutData(DTM_P == DTM_P(idx_near30D_P), :);
+        T_PutData_ = T_PutData(DTM_P == DTM_P(idx_near30D_P), :);
     end
 else
     if length(vP_unique) >= 2 && any(DTM_P > 30)
         tmpExpiry_P = [vP_unique(idxP_unique); vP_unique(idxP_unique+1)];
-        PutData_ = [PutData(DTM_P == tmpExpiry_P(1), :); PutData(DTM_P == tmpExpiry_P(2), :)];
+        T_PutData_ = [T_PutData(DTM_P == tmpExpiry_P(1), :); T_PutData(DTM_P == tmpExpiry_P(2), :)];
     else
-        PutData_ = PutData(DTM_P == DTM_P(idx_near30D_P), :);
+        T_PutData_ = T_PutData(DTM_P == DTM_P(idx_near30D_P), :);
     end
 end
 
-if isempty(CallData_)
+if isempty(T_CallData_)
     error('Check the data again.');
 end
-if isempty(PutData_)
+if isempty(T_PutData_)
     error('Check the data again.');
 end

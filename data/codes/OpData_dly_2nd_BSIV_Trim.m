@@ -6,7 +6,7 @@
 % Note that according to the document, Option Metrics calculates implied
 % volatilities with BS model.
 clear;clc;
-isDorm = false;
+isDorm = true;
 if isDorm == true
     drive = 'F:';
 else
@@ -31,16 +31,6 @@ DaysPerYear = 252;
 %     tb_m3, div, spxset, spxset_expiry, moneyness, mid, ...
 %     opret, cpflag];
 
-
-%% CallIV, PutIV: "true" model price.
-% IVs from CallData(:,6), PutData(:,6): market price that can go "wrong".
-
-% Volatility = blsimpv(Price, Strike, Rate, Time,...
-%     Value, Limit, Yield, Tolerance, Class)
-
-[CallnRow,~] = size(CallData);
-[PutnRow,~] = size(PutData);
-
 %% Filtering conditions should be added below.
 %Below took: 0.12s (LAB PC)
 tic
@@ -51,6 +41,7 @@ idx_C = find( CallBidAsk(:,1) == 0 | ... % exclude zero bid
         CallData(:,18) < max(CallData(:,11) - CallData(:,14) - ...
             CallData(:,3).*exp( -CallData(:,13).*TTM_C), 0)); % exclude call < max(S0-q-K*exp(-rT), 0)
 toc
+[CallnRow,~] = size(CallData);
 idx_C = setdiff(1:CallnRow, idx_C);
 CallData = CallData(idx_C, :); CallIV = CallIV(idx_C, :);
 CallVolDev = CallVolDev(idx_C); CallBidAsk = CallBidAsk(idx_C, :);
@@ -66,6 +57,7 @@ idx_P = find( PutBidAsk(:,1) == 0 | ... % exclude zero bid
         PutData(:,18) < max( PutData(:,14) + ...
             PutData(:,3).*exp( -PutData(:,13) .* (TTM_P) - PutData(:,11)), 0 ) );% exclude put < max(q+K*exp(-rT)-S0,0)
 toc
+[PutnRow,~] = size(PutData);
 idx_P = setdiff(1:PutnRow, idx_P);
 PutData = PutData(idx_P, :); PutIV = PutIV(idx_P, :); 
 PutVolDev = PutVolDev(idx_P); PutBidAsk = PutBidAsk(idx_P, :);
@@ -145,9 +137,25 @@ PutData = PutData(~idx_P,:); PutIV = PutIV(~idx_P,:);
 PutVolDev = PutVolDev(~idx_P,:); PutBidAsk = PutBidAsk(~idx_P,:); 
 TTM_P = TTM_P(~idx_P,:); symbol_P = symbol_P(~idx_P,:); 
 
+%% If Call or Put contain any unique (date,exdate) pair w.r.t. each other, delete it.
+[DatePair_C, idx_DatePair_C, ~] = unique(CallData(:,1:2), 'rows', 'stable');
+[DatePair_P, idx_DatePair_P, ~] = unique(PutData(:,1:2), 'rows', 'stable');
+
+DatePair_intersect = intersect(DatePair_C, DatePair_P, 'rows', 'stable');
+ismemDatePair_C = ismember(CallData(:,1:2), DatePair_intersect, 'rows');
+ismemDatePair_P = ismember(PutData(:,1:2), DatePair_intersect, 'rows');
+
+CallData = CallData(ismemDatePair_C,:); CallIV = CallIV(ismemDatePair_C,:); 
+CallVolDev = CallVolDev(ismemDatePair_C,:); CallBidAsk = CallBidAsk(ismemDatePair_C,:); 
+TTM_C = TTM_C(ismemDatePair_C,:); symbol_C = symbol_C(ismemDatePair_C,:); 
+
+PutData = PutData(ismemDatePair_P,:); PutIV = PutIV(ismemDatePair_P,:); 
+PutVolDev = PutVolDev(ismemDatePair_P,:); PutBidAsk = PutBidAsk(ismemDatePair_P,:); 
+TTM_P = TTM_P(ismemDatePair_P,:); symbol_P = symbol_P(ismemDatePair_P,:); 
+
 
 %%
-% Below took: 7.9s (LAB PC)
+% Below took: 3.9s (LAB PC)
 tic;
 save(sprintf('%s\\OpData_dly_2nd_BSIV_Trim.mat', gen_data_path), ...
     'CallData', 'CallIV', 'CallVolDev', 'CallBidAsk', 'TTM_C', 'symbol_C', ...

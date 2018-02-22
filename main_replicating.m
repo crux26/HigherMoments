@@ -5,7 +5,7 @@
 
 %% import data
 clear;clc;
-isDorm = false;
+isDorm = true;
 if isDorm == true
     drive = 'F:';
 else
@@ -57,6 +57,7 @@ idx_exdate__next = idx_exdate__(2:end)-1;
 idx_exdate_ = idx_exdate_(1:end-1);
 idx_exdate__ = idx_exdate__(1:end-1);
 %% Compare with main().
+% Problematic: jj==4949. Note that momPrice3(jj=4949)==2(>0).
 trimflag = 0;
 Smoothing_IVonly = 1;
 MomentRank = 1:4;
@@ -81,6 +82,9 @@ for jj=1:length(exdate_)                % Note that length(date_)+1==length(ia_d
     r(jj) = unique(CallData.r(tmpIdx1));       % == r__ = unique(PutData.r(tmpIdx2));
     q(jj) = unique(CallData.q(tmpIdx1));
     TTM(jj) = unique(CallData.TTM(tmpIdx1));   % == PutData.TTM(tmpIdx2);
+   
+%     figure; plot(Kc,C); xlabel('Kc'); ylabel('C'); title(sprintf('%4.f', jj)); grid on;
+%     figure; plot(Kp,P); xlabel('Kp'); ylabel('P'); title(sprintf('%4.f', jj)); grid on;
     
     momPrice(jj,:) = OpPrice2momPrice(S(jj), C, Kc, P, Kp, r(jj), TTM(jj), IV_C, IV_P, q(jj), MomentRank);
 end
@@ -102,8 +106,6 @@ idx_mmt_datediff = idx_mmt_datediff(1:end-1);
 %% T_mmt_, T_mmt___ will be the result table. (T_mmt: input table)
 DTM = daysdif(dates_, exdate_, 13);
 T_mmt = table(dates_, exdate_, SKEW, KURT, DTM);
-
-
 T_mmt_ = array2table( nan(length(idx_exdate_),5), ...
     'VariableNames', {'dates_', 'exdate_', 'SKEW', 'KURT', 'DTM'});
 
