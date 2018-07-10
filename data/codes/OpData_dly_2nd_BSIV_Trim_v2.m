@@ -1,4 +1,3 @@
-%% <importOpData_2nd.m> -> <OPData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> -> <OpData_2nd_BSIV_Trim_extrap.m>
 %% <importOpData_2nd.m> -> <OPData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> (or <~_v2>) -> <OpData_2nd_BSIV_Trim_extrap.m>
 %% "_v2" uses "rawOpData_..._Trim.mat" as an input (while "_v1" uses non-trimmed version)
 %% Results are more or less the same.
@@ -9,7 +8,8 @@
 % Note that according to the document, Option Metrics calculates implied
 % volatilities with BS model.
 clear;clc;
-isDorm = false;
+DaysPerYear = 252;
+isDorm = true;
 if isDorm == true
     drive = 'E:';
 else
@@ -21,13 +21,23 @@ gen_data_path = sprintf('%s\\data\\gen_data', homeDirectory);
 OptionsData_genData_path = sprintf('%s\\Dropbox\\GitHub\\OptionsData\\data\\gen_data', drive);
 
 %Below took: 3.3s (DORM)
-tic;
-load(sprintf('%s\\rawOpData_dly_2nd_BSIV.mat', OptionsData_genData_path), ...
-    'CallData', 'CallIV', 'CallVolDev', 'PutData', 'PutIV', 'PutVolDev', ...
-    'symbol_C', 'symbol_P', 'CallBidAsk', 'PutBidAsk', 'TTM_C', 'TTM_P');
-toc;
-DaysPerYear = 252;
+% tic;
+% load(sprintf('%s\\rawOpData_dly_2nd_BSIV.mat', OptionsData_genData_path), ...
+%     'CallData', 'CallIV', 'CallVolDev', 'PutData', 'PutIV', 'PutVolDev', ...
+%     'symbol_C', 'symbol_P', 'CallBidAsk', 'PutBidAsk', 'TTM_C', 'TTM_P');
+% toc;
 
+tic;
+load(sprintf('%s\\rawOpData_dly_2nd_BSIV_Trim.mat', OptionsData_genData_path), ...
+    'CallData', 'PutData');
+toc;
+CallIV = CallData.BSIV; CallVolDev = CallData.VolDev; symbol_C = CallData.symbol;
+CallBidAsk = [CallData.Bid, CallData.Ask]; TTM_C = CallData.TTM;
+PutIV = PutData.BSIV; PutVolDev = PutData.VolDev; symbol_P = PutData.symbol;
+PutBidAsk = [PutData.Bid, PutData.Ask]; TTM_P = PutData.TTM;
+
+CallData = CallData(:, 1:22); PutData = PutData(:, 1:22);
+CallData = table2array(CallData); PutData = table2array(PutData);
 
 % CallData = [date, exdate, strike_price, volume, open_interest, impl_volatility, ...
 %     delta, gamma, vega, theta, spindx, sprtrn, ...
@@ -160,7 +170,7 @@ TTM_P = TTM_P(ismemDatePair_P,:); symbol_P = symbol_P(ismemDatePair_P,:);
 %%
 % Below took: 7.1s (DORM)
 tic;
-save(sprintf('%s\\OpData_dly_2nd_BSIV_Trim.mat', gen_data_path), ...
+save(sprintf('%s\\OpData_dly_2nd_BSIV_Trim_v2.mat', gen_data_path), ...
     'CallData', 'CallIV', 'CallVolDev', 'CallBidAsk', 'TTM_C', 'symbol_C', ...
  'PutData', 'PutIV', 'PutVolDev', 'PutBidAsk', 'TTM_P', 'symbol_P');
 toc;
