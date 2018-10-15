@@ -1,4 +1,4 @@
-%% <importOpData_2nd.m> -> <OPData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> -> <OpData_2nd_BSIV_Trim_extrap.m>
+%% <importOpData_2nd.m> -> <OpData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> -> <OpData_2nd_BSIV_Trim_extrap.m>
 %% <importOpData_2nd.m> -> <OPData_2nd_BSIV.m> -> <OPData_2nd_BSIV_Trim.m> (or <~_v2>) -> <OpData_2nd_BSIV_Trim_extrap.m>
 %% "_v2" uses "rawOpData_..._Trim.mat" as an input (while "_v1" uses non-trimmed version)
 %% Results are more or less the same.
@@ -9,7 +9,7 @@
 % Note that according to the document, Option Metrics calculates implied
 % volatilities with BS model.
 clear;clc;
-isDorm = false;
+isDorm = 0;
 if isDorm == true
     drive = 'E:';
 else
@@ -34,11 +34,11 @@ DaysPerYear = 252;
 %     tb_m3, div, spxset, spxset_expiry, moneyness, mid, ...
 %     opret, cpflag];
 
-%% Filtering conditions should be added below.
-%Below took: 0.12s (LAB PC)
+%% Filtering conditions
+% Below took: 0.12s (LAB PC)
 tic
 idx_C = find( CallBidAsk(:,1) == 0 | ... % exclude zero bid
-        CallData(:,17) > 1/0.97 | ... % exclude ITM (S/K > 1/0.97 or K<0.97S)
+        CallData(:,17) > 1/0.97 | ... % exclude ITM (S/K > 1/0.97 or K<0.97S). Due to CCJ(2013)'s moneyness def: "K/S"
         CallData(:,18) < 3/8 | ... % mid price < $3/8, the minimum tick size
         CallData(:,18) > CallData(:,11) | ... % exclude call price more expensive than S0
         CallData(:,18) < max(CallData(:,11) - CallData(:,14) - ...
@@ -50,11 +50,11 @@ CallData = CallData(idx_C, :); CallIV = CallIV(idx_C, :);
 CallVolDev = CallVolDev(idx_C); CallBidAsk = CallBidAsk(idx_C, :);
 TTM_C = TTM_C(idx_C, :); symbol_C = symbol_C(idx_C, :);
 
-%% Filtering conditions should be added below.
+%% Filtering conditions
 % Below took: 0.11s (LAB PC)
 tic
 idx_P = find( PutBidAsk(:,1) == 0 | ... % exclude zero bid
-        PutData(:,17) < 1/1.03 |... % exclude ITM (S/K < 1/1.03 or K>1.03S)
+        PutData(:,17) < 1/1.03 |... % exclude ITM (S/K < 1/1.03 or K>1.03S). Due to CCJ(2013)'s moneyness def: "K/S"
         PutData(:,18) < 3/8 | ... % mid price < $3/8, the minimum tick size
         PutData(:,18) > PutData(:,3).*exp( -PutData(:,13) .* TTM_P) | ... %exclude put > K*exp(-rT)
         PutData(:,18) < max( PutData(:,14) + ...
@@ -155,7 +155,6 @@ TTM_C = TTM_C(ismemDatePair_C,:); symbol_C = symbol_C(ismemDatePair_C,:);
 PutData = PutData(ismemDatePair_P,:); PutIV = PutIV(ismemDatePair_P,:); 
 PutVolDev = PutVolDev(ismemDatePair_P,:); PutBidAsk = PutBidAsk(ismemDatePair_P,:); 
 TTM_P = TTM_P(ismemDatePair_P,:); symbol_P = symbol_P(ismemDatePair_P,:); 
-
 
 %%
 % Below took: 7.1s (DORM)

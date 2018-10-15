@@ -1,5 +1,5 @@
 function [T_] = idNear30D_mmt(T)
-% T = table(dates_, exdate_, SKEW, KURT, DTM);
+% T = table(dates_, exdate_, SKEW, KURT, DTM_cal);
 
 % Extracts only 1 exdate if(exdate==30D) or 2 exdates closest to 30D.
 DTM_ = T.DTM;

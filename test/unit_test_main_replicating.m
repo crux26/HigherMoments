@@ -7,9 +7,9 @@ function [SKEW, KURT, T_mmtPrice] = unit_test_main_replicating(jj)
 %% import data
 isDorm = false;
 if isDorm == true
-    drive = 'F:';
+    drive = 'E:';
 else
-    drive = 'D:';
+    drive = 'E:';
 end
 homeDirectory = sprintf('%s\\Dropbox\\GitHub\\HigherMoments', drive);
 genData_path = sprintf('%s\\data\\gen_data', homeDirectory);
@@ -88,7 +88,7 @@ T_mmtPrice = table(dates_(jj), exdate_(jj), momPrice(jj,2), momPrice(jj,3), momP
 [SKEW, KURT] = momPrice2mom(momPrice(jj,2), momPrice(jj,3), momPrice(jj,4), r(jj), TTM(jj));
 
 % idx_mmt_datediff needed for idNear30D_mmt().
-Intrivial, but checked.
+% Intrivial, but checked.
 idx_mmt_datediff = find(diff(dates_)~=0); idx_mmt_datediff = idx_mmt_datediff+1;
 idx_mmt_datediff = [1; idx_mmt_datediff; length(dates_)+1];
 idx_mmt_datediffNext = idx_mmt_datediff(2:end)-1;

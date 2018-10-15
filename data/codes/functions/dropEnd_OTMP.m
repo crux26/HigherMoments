@@ -2,13 +2,14 @@ function [T_PutData] = dropEnd_OTMP(T_PutData)
 % Copied from TRP, but changed the structure here.
 if isempty(T_PutData)   % Can be empty for "PutData_2".
     T_PutData=[];
+    disp('empty(T_CallData)');
     return;
 end
 tmpMult = 1.5;
 
-%% drop
-if length(T_PutData.P)>2 && (T_PutData.Kp(1) < T_PutData.Kp(2) - tmpMult*(T_PutData.Kp(3)-T_PutData.Kp(2)))
-% 	P = P(2:end); Kp = Kp(2:end); IV = IV(2:end);
+%% drop if endpoint is too far apart
+while length(T_PutData.P)>2 && ...
+        ( T_PutData.Kp(1) < T_PutData.Kp(2) - tmpMult*(T_PutData.Kp(3)-T_PutData.Kp(2)) )
     T_PutData = T_PutData(2:end,:);
 end
 

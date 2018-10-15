@@ -1,15 +1,16 @@
 function [T_CallData] = dropEnd_OTMC(T_CallData)
+% Copied from TRP, but changed the structure here.
 if isempty(T_CallData)  % Can be empty for "CallData_2".
     T_CallData=[];
+    disp('empty(T_CallData)');
     return;
 end
 tmpMult = 1.5;
 
-%% drop
+%% drop if endpoint is too far apart
 % if Kc(end) >>> Kc(end-1), crazy extrapolation results occur.
 while length(T_CallData.C)>2 && ...
         (T_CallData.Kc(end) > T_CallData.Kc(end-1) + tmpMult*(T_CallData.Kc(end-1)-T_CallData.Kc(end-2)))
-%     C = C(1:end-1); Kc = Kc(1:end-1); IV = IV(1:end-1);
 	T_CallData = T_CallData(1:end-1,:);
 end
 

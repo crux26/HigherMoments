@@ -5,9 +5,11 @@ function out = momweight(X,S0,n)
     % asset price S0 and contract exponent N.
     %
     % out (weight) same for both call and put. Note the moneyness notation in BKM03.
-    out = 1./X.^2 .* n .* ( (n-1) .* log(X./S0).^(n-2) - log(X./S0).^(n-1));
+    out = 1./X.^2 .* n .* ( (n-1) .* log(X./S0).^(n-2) - log(X./S0).^(n-1) );
     idx_ = find(~isnan(out));
     out = interp1( X(idx_), out(idx_), X, 'linear', 'extrap');
+
+% I changed below for above, using interp1().
 %     idx = find(isnan(out));
 %     if ~isempty(idx)
 %         if idx==length(out)

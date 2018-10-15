@@ -1,3 +1,5 @@
+%% var(my SKEW, KURT) >>> var(paper's SKEW, KURT). Must fix it.
+
 %% main_replicating() -> main_tsreg().
 %% main: HigherMoments
 % Ultimate goal: Calculate option implied moments and pass the results to main_tsreg().
@@ -5,17 +7,19 @@
 
 %% import data
 clear;clc;
-isDorm = true;
+isDorm = 1;
 if isDorm == true
-    drive = 'F:';
+    drive = 'E:';
 else
-    drive = 'D:';
+    drive = 'E:';
 end
 homeDirectory = sprintf('%s\\Dropbox\\GitHub\\HigherMoments', drive);
 genData_path = sprintf('%s\\data\\gen_data', homeDirectory);
 addpath(sprintf('%s\\main_functions', homeDirectory));
 
 % Below takes: 4.3s (LAB PC)
+% OpData_dly_2nd_BSIV_Trim_extrap: follows Chang, Christoffersen, Jacobs(2013)'s extrap
+% OpData_dly_2nd_BSIV_Trim: no extrap over grids. "Base" for above.
 tic;
 load(sprintf('%s\\OpData_dly_2nd_BSIV_Trim_extrap.mat', genData_path), ...
     'CallData_extrap', 'PutData_extrap');
@@ -103,10 +107,12 @@ idx_mmt_datediff = [1; idx_mmt_datediff; length(dates_)+1];
 idx_mmt_datediffNext = idx_mmt_datediff(2:end)-1;
 idx_mmt_datediff = idx_mmt_datediff(1:end-1);
 
-%% T_mmt_, T_mmt___ will be the result table. (T_mmt: input table)
-DTM = daysdif(dates_, exdate_, 13);
+%% T_mmt_, T_mmt__ will be the result table. (T_mmt: input table)
+% T_mmt_: contains near30D only.
+% T_mmt__: interp1() for fixed calendar 30D expiries.
+DTM = daysdif(dates_, exdate_); % DTM_cal for 30D
 T_mmt = table(dates_, exdate_, SKEW, KURT, DTM);
-T_mmt_ = array2table( nan(length(idx_exdate_),5), ...
+T_mmt_ = array2table( nan(length(idx_exdate_), 5), ...
     'VariableNames', {'dates_', 'exdate_', 'SKEW', 'KURT', 'DTM'});
 
 % Below takes: 5.9s -> 5.0s (LAB, DORM)
@@ -128,7 +134,7 @@ idx_mmt_datediff_ = idx_mmt_datediff_(1:end-1);
 
 % length(idx_exdate_): >> than needed, as idNear30D_mmt() returns
 % atmost 2 for each date (ideally)
-T_mmt__ = array2table( nan(length(unique(T_mmt_.dates_))*2,5), ...
+T_mmt__ = array2table( nan( length(unique(T_mmt_.dates_))*2, 5), ...
     'VariableNames', {'date_', 'exdate_artificial', 'SKEW', 'KURT', 'DTM'});
 
 % Below takes: 8.8s -> 7.6s (LAB, DORM)

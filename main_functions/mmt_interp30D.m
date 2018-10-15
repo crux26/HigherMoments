@@ -1,4 +1,6 @@
 function [T_] = mmt_interp30D(T)
+% T = table(dates_, exdate_, SKEW, KURT, DTM_cal);
+
 % Input: near30D SKEW & KURT, 2 data at maximum (1 data at minimum).
 % Output: 30D SKEW & KURT, time interpolated.
 nRow = size(T,1);

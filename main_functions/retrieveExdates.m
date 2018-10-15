@@ -1,3 +1,5 @@
+% (exdate_, idx_exdate_): for C
+% (exdate__, idx_exdate__): for P
 function [exdate_, idx_exdate_, exdate__, idx_exdate__, date] = retrieveExdates(CallData, PutData)
 
 [date_, idx_date_] = unique(CallData.date);
